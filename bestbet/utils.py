@@ -20,54 +20,53 @@ def Moneyline2Odds(ML: float) -> float:
         b = -100/ML
     return b
 
-def TrueProbability(MLteamA: float, MLteamB: float, teamAunder: float)-> float:
-    implied_A = Moneyline2Prob(MLteamA)
-    implied_B = Moneyline2Prob(MLteamB)
-    total_p = implied_A + implied_B
+def TrueProbability(ML_home: float, ML_opposition: float, estimated_bias: float)-> float:
+    implied_home = Moneyline2Prob(ML_home)
+    implied_opposition = Moneyline2Prob(ML_opposition)
+    total_p = implied_home + implied_opposition
     vig_A = (total_p - 1)/2
-    p = implied_A - vig_A + teamAunder # true probability TEAM A wins
+    p = implied_home - vig_A + estimated_bias # true probability TEAM A wins
     return p
 
-def Vig(MLteamA: float, MLteamB: float)-> float:
-    implied_A = Moneyline2Prob(MLteamA)
-    implied_B = Moneyline2Prob(MLteamB)
-    total_p = implied_A + implied_B
+def Vig(ML_home: float, ML_opposition: float)-> float:
+    implied_home = Moneyline2Prob(ML_home)
+    implied_opposition = Moneyline2Prob(ML_opposition)
+    total_p = implied_home + implied_opposition
     vig = (total_p - 1)
     return vig
 
-def KellyRatio(p: float, b: float) -> float:
+def KellyRatio(ML_home: float, ML_opposition: float, estimated_bias: float, ) -> float:
     '''
     Compute Kelly Criterion ratio given probability p and odds b
     '''
+    p = TrueProbability(ML_home, ML_opposition, estimated_bias)
+    b = Moneyline2Odds(ML_home)
     kelly = p - (1-p)/b
     return kelly
 
-def KellyBet(MLteamA: float, MLteamB: float, teamAunder: float, capital: float) -> float:
+def KellyBet(ML_home: float, ML_opposition: float,estimated_bias: float, capital: float) -> float:
     '''
     Determine the Kelly Criterion Bet for TEAM A, given the following inputs:
 
-        MLteamA: Moneyline odds for TEAM A
+        ML_home: Moneyline odds for TEAM A
 
-        MLteamB: Moneyline odds for TEAM B
+        ML_opposition: Moneyline odds for TEAM B
 
         capitol: Cash to bet
 
-        teamAunder: True probability of TEAM A win - implied probability TEAM A win
+        estimated_bias: True probability of TEAM A win - implied probability TEAM A win
     '''
-
-    true_p = TrueProbability(MLteamA, MLteamB, teamAunder)
-    b = Moneyline2Odds(MLteamA)
-    kelly_ratio = KellyRatio(true_p, b)
+    kelly_ratio = KellyRatio(ML_home, ML_opposition, estimated_bias)
     bet = kelly_ratio*capital
     return bet   
 
-def ExpectedGeometricGain(MLteamA: float, MLteamB: float, teamAunder: float) -> float:
+def ExpectedGeometricGain(ML_home: float, ML_opposition: float, estimated_bias: float) -> float:
     '''
     Average expected geometric gain for one game, single kelly bet
     '''
-    true_p = TrueProbability(MLteamA, MLteamB, teamAunder)
-    b = Moneyline2Odds(MLteamA)
-    X = KellyRatio(true_p, b)
+    true_p = TrueProbability(ML_home, ML_opposition, estimated_bias)
+    b = Moneyline2Odds(ML_home)
+    X = KellyRatio(ML_home, ML_opposition, estimated_bias)
     r = (1+b*X)**true_p * (1-X)**(1-true_p)
     return r
 
